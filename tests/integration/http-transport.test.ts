@@ -104,7 +104,7 @@ describe('HTTP Transport Integration', () => {
     expect(resp.status).toBe(200);
     const body = await resp.json();
     expect(body.status).toBe('ok');
-    expect(body.version).toBe('0.2.0');
+    expect(body.version).toBe('0.3.0');
     expect(typeof body.uptime).toBe('number');
   });
 
@@ -112,7 +112,7 @@ describe('HTTP Transport Integration', () => {
     const client = new MCPHttpClient(baseUrl);
     const health = await client.healthCheck();
     expect(health.status).toBe('ok');
-    expect(health.version).toBe('0.2.0');
+    expect(health.version).toBe('0.3.0');
   });
 
   // ── Agents ──
@@ -401,5 +401,57 @@ describe('HTTP Transport Integration', () => {
       body: 'not json at all{{{',
     });
     expect(resp.status).toBe(400);
+  });
+
+  // ── Metrics Endpoint ──
+
+  it('returns metrics snapshot', async () => {
+    const resp = await fetch(`${baseUrl}/metrics`);
+    expect(resp.status).toBe(200);
+    const body = await resp.json() as { counters: Record<string, unknown>; collectedAt: string };
+    expect(body.counters).toBeDefined();
+    expect(body.collectedAt).toBeDefined();
+  });
+
+  // ── Rate Limiting ──
+
+  it('enforces rate limiting with custom config', async () => {
+    const revocations = new InMemoryRevocationList();
+    const budgetTracker = new InMemoryBudgetTracker();
+    const plugin = createMCPPlugin({
+      toolCapabilities: {},
+      trustedRoots: [],
+      revocations,
+      budgetTracker,
+    });
+
+    const { RateLimitMiddleware } = await import('../../src/transport/rate-limiter.js');
+    const rateLimiter = new RateLimitMiddleware({
+      defaultConfig: { maxTokens: 3, refillRate: 1, refillIntervalMs: 60_000 },
+    });
+
+    const rlServer = new MCPHttpServer(
+      { port: 0, host: '127.0.0.1', basePath: '', authRequired: false },
+      plugin,
+      undefined,
+      { rateLimiter },
+    );
+
+    await rlServer.start();
+    const rlUrl = `http://127.0.0.1:${rlServer.port}`;
+
+    // First 3 requests should succeed
+    for (let i = 0; i < 3; i++) {
+      const resp = await fetch(`${rlUrl}/health`);
+      expect(resp.status).toBe(200);
+    }
+
+    // 4th request should be rate limited
+    const resp = await fetch(`${rlUrl}/health`);
+    expect(resp.status).toBe(429);
+    const body = await resp.json() as { error: { code: number } };
+    expect(body.error.code).toBe(429);
+
+    await rlServer.stop();
   });
 });

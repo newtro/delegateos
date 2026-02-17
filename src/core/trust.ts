@@ -10,6 +10,8 @@ import type {
   TrustOutcome,
   Attestation,
 } from './types.js';
+import { createLogger } from './logger.js';
+import { globalMetrics } from './metrics.js';
 
 const DEFAULT_CONFIG: TrustEngineConfig = {
   halfLifeMs: 7 * 24 * 60 * 60 * 1000, // 7 days
@@ -25,6 +27,7 @@ const DEFAULT_CONFIG: TrustEngineConfig = {
 export class TrustEngine {
   private profiles: Map<string, TrustProfile> = new Map();
   private config: TrustEngineConfig;
+  private logger = createLogger('TrustEngine');
 
   /**
    * Create a new trust engine.
@@ -60,6 +63,8 @@ export class TrustEngine {
     profile.outcomes.push(outcome);
     profile.updatedAt = new Date().toISOString();
     this.profiles.set(principalId, profile);
+    globalMetrics.counter('trust.outcomes_recorded', { success: String(outcome.success) });
+    this.logger.debug('Outcome recorded', { principalId, success: outcome.success });
   }
 
   /**

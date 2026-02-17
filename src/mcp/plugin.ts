@@ -5,9 +5,12 @@ import { verifyDCT, inspectDCT } from '../core/dct.js';
 import type { SerializedDCT, RevocationEntry, VerificationContext, DenialReason } from '../core/types.js';
 import type { MCPPluginConfig, MCPRequest, MCPErrorResponse, DelegateOSMeta } from './types.js';
 import { AuditLog } from './audit.js';
+import { createLogger } from '../core/logger.js';
+import { globalMetrics } from '../core/metrics.js';
 
 export function createMCPPlugin(config: MCPPluginConfig) {
   const audit = new AuditLog();
+  const logger = createLogger('MCPPlugin');
   let _lastAuthorizedMeta: DelegateOSMeta | null = null;
 
   function makeError(id: string | number | undefined, code: number, message: string, data?: unknown): MCPErrorResponse {
@@ -37,6 +40,7 @@ export function createMCPPlugin(config: MCPPluginConfig) {
     // No DelegateOS metadata — pass through unchanged
     if (!meta) {
       audit.passthrough(req.method);
+      globalMetrics.counter('mcp.passthrough');
       return req;
     }
 
@@ -116,6 +120,8 @@ export function createMCPPlugin(config: MCPPluginConfig) {
       const result = verifyDCT(token, context);
       if (result.ok) {
         authorized = true;
+        globalMetrics.counter('mcp.authorized', { tool: toolName as string });
+        logger.info('DCT authorized', { tool: toolName, delegationId: meta.delegationId });
 
         // Capture meta before stripping for spend tracking
         _lastAuthorizedMeta = meta;
@@ -142,6 +148,8 @@ export function createMCPPlugin(config: MCPPluginConfig) {
     }
 
     // All roots failed
+    globalMetrics.counter('mcp.denied', { tool: toolName as string });
+    logger.warn('DCT denied', { tool: toolName, delegationId: meta.delegationId, reason: lastDenial?.type });
     audit.denied({
       method: req.method,
       toolName,

@@ -3,6 +3,8 @@
  */
 
 import Database from 'better-sqlite3';
+import { createLogger } from '../core/logger.js';
+import { globalMetrics } from '../core/metrics.js';
 import type {
   StorageAdapter,
   Delegation,
@@ -15,11 +17,13 @@ import type {
 
 export class SqliteStorageAdapter implements StorageAdapter {
   private db: Database.Database;
+  private logger = createLogger('SqliteStorage');
 
   constructor(dbPath: string = ':memory:') {
     this.db = new Database(dbPath);
     this.db.pragma('journal_mode = WAL');
     this.createTables();
+    this.logger.info('SQLite storage initialized', { dbPath });
   }
 
   private createTables(): void {
@@ -90,6 +94,7 @@ export class SqliteStorageAdapter implements StorageAdapter {
       INSERT OR REPLACE INTO delegations (id, parent_id, "from", "to", contract_id, dct_json, depth, status, created_at, completed_at, attestation_id)
       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `).run(d.id, d.parentId, d.from, d.to, d.contractId, JSON.stringify(d.dct), d.depth, d.status, d.createdAt, d.completedAt ?? null, d.attestationId ?? null);
+    globalMetrics.counter('storage.delegations_saved');
   }
 
   async getDelegation(id: string): Promise<Delegation | null> {

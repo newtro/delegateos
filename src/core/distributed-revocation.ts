@@ -6,6 +6,8 @@
 import type { RevocationEntry, Result, Keypair } from './types.js';
 import { InMemoryRevocationList, createRevocationEntry } from './revocation.js';
 import { verifyObjectSignature } from './crypto.js';
+import { createLogger } from './logger.js';
+import { globalMetrics } from './metrics.js';
 
 // ── RevocationStore Interface ──
 
@@ -99,6 +101,7 @@ export class DistributedRevocationStore implements RevocationStore {
   private subscribers: Set<(entry: RevocationEntry) => void> = new Set();
   private seen: Set<string> = new Set(); // deduplication by revocationId
   private syncTimer: ReturnType<typeof setInterval> | null = null;
+  private logger = createLogger('DistributedRevocation');
 
   constructor(config?: Partial<DistributedRevocationConfig>) {
     this.config = { ...DEFAULT_CONFIG, ...config };
@@ -142,6 +145,8 @@ export class DistributedRevocationStore implements RevocationStore {
 
     // Store locally (use addUnchecked since we already verified)
     this.local.getInner().addUnchecked(entry);
+    this.logger.info('Revocation stored and broadcasting', { revocationId: entry.revocationId });
+    globalMetrics.counter('revocation.stored');
 
     // Notify local subscribers
     for (const cb of this.subscribers) {

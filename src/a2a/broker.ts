@@ -17,11 +17,15 @@ import { TrustEngine } from '../core/trust.js';
 import { createDCT } from '../core/dct.js';
 import { generateDelegationId } from '../core/chain.js';
 import { createCompletionAttestation } from '../core/attestation.js';
+import { createLogger } from '../core/logger.js';
+import { globalMetrics } from '../core/metrics.js';
 
 /**
  * Brokers delegations between agents using the registry and trust engine.
  */
 export class DelegationBroker {
+  private logger = createLogger('DelegationBroker');
+
   constructor(
     private registry: AgentRegistry,
     private trustEngine: TrustEngine,
@@ -44,6 +48,7 @@ export class DelegationBroker {
     });
 
     if (candidates.length === 0) {
+      this.logger.warn('No agents found', { contractId: contract.id });
       return { ok: false, error: new Error('No agents found matching contract requirements') };
     }
 
@@ -78,6 +83,8 @@ export class DelegationBroker {
     });
 
     scored.sort((a, b) => b.rank - a.rank);
+    this.logger.info('Agent selected', { principal: scored[0].card.principal, rank: scored[0].rank });
+    globalMetrics.counter('broker.agents_found');
     return { ok: true, value: scored[0].card };
   }
 
@@ -129,6 +136,8 @@ export class DelegationBroker {
       createdAt: new Date().toISOString(),
     };
 
+    this.logger.info('Delegation proposed', { delegationId, to: to.principal });
+    globalMetrics.counter('broker.delegations_proposed');
     return { ok: true, value: { dct, delegation } };
   }
 

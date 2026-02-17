@@ -10,6 +10,9 @@ import type { MCPRequest } from '../mcp/types.js';
 import type { AgentRegistry } from '../a2a/registry.js';
 import type { TransportConfig, TransportMessage, TransportResponse, TransportError } from './types.js';
 import { SSEWriter } from './sse.js';
+import { createLogger, type Logger } from '../core/logger.js';
+import { globalMetrics, type MetricsCollector } from '../core/metrics.js';
+import { RateLimitMiddleware, type RateLimitResult } from './rate-limiter.js';
 
 /** Active SSE session */
 interface SSESession {
@@ -35,12 +38,20 @@ export class MCPHttpServer {
   private sessions = new Map<string, SSESession>();
   private startedAt = 0;
   private connections = new Set<import('node:net').Socket>();
+  private logger: Logger;
+  private metrics: MetricsCollector;
+  private rateLimiter: RateLimitMiddleware;
 
   constructor(
     private config: TransportConfig,
     private mcpPlugin: MCPPlugin,
     private registry?: AgentRegistry,
-  ) {}
+    opts?: { metrics?: MetricsCollector; rateLimiter?: RateLimitMiddleware },
+  ) {
+    this.logger = createLogger('MCPHttpServer');
+    this.metrics = opts?.metrics ?? globalMetrics;
+    this.rateLimiter = opts?.rateLimiter ?? new RateLimitMiddleware();
+  }
 
   async start(): Promise<void> {
     return new Promise((resolve, reject) => {
@@ -51,6 +62,8 @@ export class MCPHttpServer {
       });
       this.server.listen(this.config.port, this.config.host, () => {
         this.startedAt = Date.now();
+        this.logger.info('Server started', { port: this.port, host: this.config.host });
+        this.rateLimiter.startCleanup();
         resolve();
       });
       this.server.on('error', reject);
@@ -58,6 +71,9 @@ export class MCPHttpServer {
   }
 
   async stop(): Promise<void> {
+    this.logger.info('Server stopping');
+    this.rateLimiter.stopCleanup();
+
     // Close all SSE sessions
     for (const session of this.sessions.values()) {
       session.writer?.close();
@@ -86,6 +102,8 @@ export class MCPHttpServer {
   // ── Request Router ──
 
   private async handleRequest(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    const startTime = Date.now();
+
     // CORS
     this.setCors(res);
     if (req.method === 'OPTIONS') {
@@ -98,9 +116,25 @@ export class MCPHttpServer {
     const path = url.pathname;
     const base = this.config.basePath;
 
+    // Rate limiting
+    const clientIp = req.socket.remoteAddress ?? 'unknown';
+    const rlResult = this.rateLimiter.checkRequest(path, { ip: clientIp });
+    if (!rlResult.allowed) {
+      this.metrics.counter('http.rate_limited', { path });
+      this.logger.warn('Rate limited', { ip: clientIp, path, retryAfterMs: rlResult.retryAfterMs });
+      res.setHeader('Retry-After', String(Math.ceil((rlResult.retryAfterMs ?? 1000) / 1000)));
+      this.sendJson(res, 429, { error: { code: 429, message: 'Too many requests' } });
+      return;
+    }
+
+    this.metrics.counter('http.requests', { method: req.method ?? 'UNKNOWN', path });
+
     try {
       if (req.method === 'GET' && path === `${base}/health`) {
         return this.handleHealth(res);
+      }
+      if (req.method === 'GET' && path === `${base}/metrics`) {
+        return this.handleMetrics(res);
       }
       if (req.method === 'GET' && path === `${base}/agents`) {
         return this.handleAgents(res);
@@ -119,18 +153,13 @@ export class MCPHttpServer {
       this.sendJson(res, 404, { error: { code: 404, message: 'Not found' } });
     } catch (err) {
       const message = err instanceof Error ? err.message : 'Internal server error';
-      // Log error for diagnostics (structured format)
-      console.error(JSON.stringify({
-        level: 'error',
-        component: 'MCPHttpServer',
-        method: req.method,
-        path: req.url,
-        error: message,
-        timestamp: new Date().toISOString(),
-      }));
+      this.logger.error('Request error', { method: req.method, path: req.url, error: message });
+      this.metrics.counter('http.errors', { path });
       this.sendJson(res, 500, {
         error: { code: 500, message },
       });
+    } finally {
+      this.metrics.histogram('http.duration_ms', Date.now() - startTime, { path });
     }
   }
 
@@ -139,9 +168,13 @@ export class MCPHttpServer {
   private handleHealth(res: ServerResponse): void {
     this.sendJson(res, 200, {
       status: 'ok',
-      version: '0.2.0',
+      version: '0.3.0',
       uptime: Date.now() - this.startedAt,
     });
+  }
+
+  private handleMetrics(res: ServerResponse): void {
+    this.sendJson(res, 200, this.metrics.getSnapshot());
   }
 
   private handleAgents(res: ServerResponse): void {

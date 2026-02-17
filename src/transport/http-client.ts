@@ -5,6 +5,9 @@
 import type { SerializedDCT } from '../core/types.js';
 import type { TransportMessage, TransportResponse, SSEEvent } from './types.js';
 import { SSEReader } from './sse.js';
+import { CircuitBreaker, type CircuitBreakerConfig } from '../core/circuit-breaker.js';
+import { createLogger } from '../core/logger.js';
+import { globalMetrics } from '../core/metrics.js';
 
 export interface RetryConfig {
   maxRetries: number;
@@ -20,29 +23,43 @@ const DEFAULT_RETRY: RetryConfig = { maxRetries: 3, baseDelayMs: 100, maxDelayMs
 export class MCPHttpClient {
   private retryConfig: RetryConfig;
   private idCounter = 0;
+  private circuitBreaker: CircuitBreaker;
+  private logger = createLogger('MCPHttpClient');
 
   constructor(
     private baseUrl: string,
     private dct?: SerializedDCT,
     retryConfig?: Partial<RetryConfig>,
+    circuitBreakerConfig?: CircuitBreakerConfig,
   ) {
     this.retryConfig = { ...DEFAULT_RETRY, ...retryConfig };
+    this.circuitBreaker = new CircuitBreaker(
+      circuitBreakerConfig ?? { failureThreshold: 5, resetTimeoutMs: 30_000, halfOpenMaxAttempts: 2 },
+    );
+  }
+
+  /** Get the circuit breaker for inspection/testing. */
+  getCircuitBreaker(): CircuitBreaker {
+    return this.circuitBreaker;
   }
 
   /**
    * Standard request/response MCP call.
    */
   async call(method: string, params: unknown): Promise<unknown> {
-    const id = String(++this.idCounter);
-    const msg: TransportMessage = { id, method, params };
+    return this.circuitBreaker.execute(async () => {
+      const id = String(++this.idCounter);
+      const msg: TransportMessage = { id, method, params };
 
-    const resp = await this.postWithRetry('/mcp/message', msg);
-    const body = (await resp.json()) as TransportResponse;
+      const resp = await this.postWithRetry('/mcp/message', msg);
+      const body = (await resp.json()) as TransportResponse;
 
-    if (body.error) {
-      throw new Error(`MCP error ${body.error.code}: ${body.error.message}`);
-    }
-    return body.result;
+      if (body.error) {
+        throw new Error(`MCP error ${body.error.code}: ${body.error.message}`);
+      }
+      globalMetrics.counter('client.calls', { method });
+      return body.result;
+    });
   }
 
   /**
@@ -88,9 +105,11 @@ export class MCPHttpClient {
    * Health check.
    */
   async healthCheck(): Promise<{ status: string; version: string }> {
-    const resp = await fetch(`${this.baseUrl}/health`);
-    if (!resp.ok) throw new Error(`Health check failed: ${resp.status}`);
-    return (await resp.json()) as { status: string; version: string };
+    return this.circuitBreaker.execute(async () => {
+      const resp = await fetch(`${this.baseUrl}/health`);
+      if (!resp.ok) throw new Error(`Health check failed: ${resp.status}`);
+      return (await resp.json()) as { status: string; version: string };
+    });
   }
 
   // ── Internals ──
