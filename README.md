@@ -156,6 +156,16 @@ See [docs/protocol-spec.md](docs/protocol-spec.md) for the wire-level protocol s
 
 **v0.2 complete** — 257 tests, 0 TypeScript errors.
 
+### v0.3 — Production Readiness
+- **Structured Logging** — `Logger` interface with `ConsoleLogger` outputting JSON-structured logs (timestamp, level, module, message, context). `createLogger(module)` factory, `LogLevel` enum (DEBUG/INFO/WARN/ERROR/SILENT), runtime `setGlobalLogLevel()`, per-logger level override
+- **Rate Limiting** — Token bucket `RateLimiter` with per-key tracking, `RateLimitMiddleware` with route-based configs, wildcard pattern matching, configurable key extraction (IP/principal/combined), automatic stale bucket cleanup, 429 with Retry-After
+- **Metrics & Observability** — `MetricsCollector` with counter/gauge/histogram primitives, tag-based dimensionality, `MetricsAdapter` interface for external systems (Prometheus, StatsD), snapshot export, `globalMetrics` singleton
+- **Token Versioning & Migration** — `TokenVersion` type, backward-compatible version field (missing = v1.0), `isCompatible()` check, `migrateToken()` with registered migration functions, migration registry with `registerMigration()`
+- **Circuit Breaker** — `CircuitBreaker` with CLOSED/OPEN/HALF_OPEN states, configurable failure threshold and reset timeout, state change callbacks, `CircuitOpenError`, `forceReset()` for manual recovery
+- **Rate Limit Infrastructure** — Route-level rate limiting with exact and prefix matching, separate buckets per key, periodic cleanup of stale entries
+
+**v0.3 complete** — 374 tests across 27 files, 0 TypeScript errors.
+
 ## License
 
 MIT

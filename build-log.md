@@ -123,3 +123,26 @@ Loop Constraints: max 3 iterations per phase, score ≥ 7 to pass
 - TypeScript: 0 compile errors ✅
 - Tests: 257 passing (209 existing + 48 new) ✅
 - Status: **v0.2 COMPLETE**
+
+---
+
+## v0.3 — Production Readiness (2026-02-17)
+
+### Features Added
+1. **Structured Logging** (`src/core/logger.ts`) — Logger interface, ConsoleLogger with JSON output, LogLevel enum, global/per-logger level control
+2. **Rate Limiting** (`src/transport/rate-limiter.ts`) — Token bucket algorithm, RateLimitMiddleware with route matching, key extractors, stale bucket cleanup
+3. **Metrics & Observability** (`src/core/metrics.ts`) — MetricsCollector with counter/gauge/histogram, tag dimensions, MetricsAdapter interface, snapshot export
+4. **Token Versioning** (`src/core/token-version.ts`) — TokenVersion type, compatibility check, migration registry, backward-compatible version field
+5. **Circuit Breaker** (`src/core/circuit-breaker.ts`) — CLOSED/OPEN/HALF_OPEN states, failure threshold, auto-recovery, state change callbacks
+
+### Test Files Added
+- `tests/logger.test.ts` (11 tests)
+- `tests/rate-limiter.test.ts` (15 tests)
+- `tests/metrics.test.ts` (15 tests)
+- `tests/token-version.test.ts` (15 tests)
+- `tests/circuit-breaker.test.ts` (13 tests)
+
+### Results
+- TypeScript: 0 compile errors ✅
+- Tests: 374 passing (305 existing + 69 new) across 27 files ✅
+- Status: **v0.3 COMPLETE**

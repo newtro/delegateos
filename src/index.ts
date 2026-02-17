@@ -180,3 +180,33 @@ export { MCPHttpServer } from './transport/http-server.js';
 export { MCPHttpClient } from './transport/http-client.js';
 export type { RetryConfig } from './transport/http-client.js';
 export { SSEWriter, SSEReader } from './transport/sse.js';
+
+// ── Logging ──
+export { createLogger, ConsoleLogger, setGlobalLogLevel, getGlobalLogLevel, setLogOutput, resetLogOutput, LogLevel } from './core/logger.js';
+export type { Logger, LogEntry } from './core/logger.js';
+
+// ── Rate Limiting ──
+export { RateLimiter, RateLimitMiddleware, ipKeyExtractor, principalKeyExtractor, combinedKeyExtractor } from './transport/rate-limiter.js';
+export type { RateLimiterConfig, RateLimitResult, RouteLimitConfig, KeyExtractor } from './transport/rate-limiter.js';
+
+// ── Metrics ──
+export { MetricsCollector, globalMetrics } from './core/metrics.js';
+export type { MetricsSnapshot, MetricsAdapter } from './core/metrics.js';
+
+// ── Token Versioning ──
+export {
+  TOKEN_CURRENT_VERSION,
+  isCompatible,
+  migrateToken,
+  registerMigration,
+  clearMigrations,
+  getTokenVersion,
+  setTokenVersion,
+  versionString,
+  parseVersion,
+} from './core/token-version.js';
+export type { TokenVersion, MigrateFn } from './core/token-version.js';
+
+// ── Circuit Breaker ──
+export { CircuitBreaker, CircuitOpenError } from './core/circuit-breaker.js';
+export type { CircuitBreakerConfig, CircuitState, StateChangeCallback } from './core/circuit-breaker.js';
