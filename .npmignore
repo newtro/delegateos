@@ -1,0 +1,11 @@
+tests/
+src/
+docs/
+marketing/
+research/
+*.test.ts
+vitest.config.ts
+tsconfig.json
+build-log.md
+.gitignore
+node_modules/

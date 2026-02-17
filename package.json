@@ -24,6 +24,15 @@
     "middleware"
   ],
   "license": "MIT",
+  "author": "Scott Smith <scott@johnnycode.ai> (https://johnnycode.ai)",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/newtro/delegateos.git"
+  },
+  "homepage": "https://github.com/newtro/delegateos#readme",
+  "bugs": {
+    "url": "https://github.com/newtro/delegateos/issues"
+  },
   "scripts": {
     "build": "tsc",
     "test": "vitest run",
