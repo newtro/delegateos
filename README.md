@@ -150,9 +150,11 @@ See [docs/protocol-spec.md](docs/protocol-spec.md) for the wire-level protocol s
 - **A2A Protocol** — Agent Card self-describing identity with Ed25519-signed cards, `AgentRegistry` for discovery/resolution, `DelegationBroker` for automated agent selection and delegation proposal based on capabilities, trust scores, and cost
 - **Distributed Revocation** — Async `RevocationStore` interface with `LocalRevocationStore` (wraps existing) and `DistributedRevocationStore` with gossip-style sync, anti-entropy, deduplication, and signature verification. In-process simulation for v0.2
 
-### Coming in v0.2 Phase C
-- HTTP+SSE MCP proxy transport
-- Real network transport for distributed revocation
+### v0.2 Phase C
+- **HTTP+SSE Transport** — `MCPHttpServer` exposing MCP middleware over HTTP with SSE streaming, `MCPHttpClient` with retry/backoff, `SSEWriter`/`SSEReader` utilities. Routes: `/mcp/message`, `/mcp/stream`, `/mcp/events/:sessionId`, `/health`, `/agents`
+- **Integration Tests** — 48 end-to-end tests covering full delegation lifecycle (3-level chains, budget cascade, capability attenuation, mid-chain revocation), HTTP transport, trust+verification, and storage roundtrips across both adapters
+
+**v0.2 complete** — 257 tests, 0 TypeScript errors.
 
 ## License
 

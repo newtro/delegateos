@@ -167,3 +167,16 @@ export type {
 // ── Storage ──
 export { MemoryStorageAdapter } from './storage/memory.js';
 export { SqliteStorageAdapter } from './storage/sqlite.js';
+
+// ── Transport ──
+export type {
+  TransportMessage,
+  TransportResponse,
+  TransportError,
+  TransportConfig,
+  SSEEvent,
+} from './transport/types.js';
+export { MCPHttpServer } from './transport/http-server.js';
+export { MCPHttpClient } from './transport/http-client.js';
+export type { RetryConfig } from './transport/http-client.js';
+export { SSEWriter, SSEReader } from './transport/sse.js';
