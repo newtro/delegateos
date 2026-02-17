@@ -44,7 +44,7 @@ Use case: agent marketplace. Multiple vendors publish agents as services. Delega
 The Google DeepMind delegation paper (Feb 2026) identified this exact gap. MCP does tool access. A2A does agent communication. Nobody does trust and accountability between delegating agents. That paper is why DelegateOS exists.
 
 **Tweet 8:**
-TypeScript, MIT licensed, 374 tests, MCP middleware plugin included. npm install delegateos.
+TypeScript, MIT licensed, 374 tests, MCP middleware plugin included. npm install delegate-os.
 
 https://github.com/newtro/delegateos
 
@@ -100,7 +100,7 @@ The critical property is **monotonic attenuation**. When Agent A delegates to Ag
 Let's walk through the personal assistant use case. You're the root authority. Your assistant gets broad capabilities. It delegates research to a sub-agent with narrow scope.
 
 ```typescript
-import { generateKeypair, createDCT, attenuateDCT, verifyDCT } from 'delegateos';
+import { generateKeypair, createDCT, attenuateDCT, verifyDCT } from 'delegate-os';
 
 // Everyone gets an Ed25519 keypair
 const you = generateKeypair();
@@ -167,7 +167,7 @@ DelegateOS is at v0.3 with 374 tests across 27 files. The core is solid. What's 
 - **HTTP+SSE transport** for running the MCP middleware as a standalone service.
 - **Real LLM judge and human review adapters** (currently mocked for testing).
 
-The repository is at github.com/newtro/delegateos. MIT licensed. TypeScript all the way down. npm install delegateos.
+The repository is at github.com/newtro/delegateos. MIT licensed. TypeScript all the way down. npm install delegate-os.
 
 If you're building multi-agent systems and you haven't solved the trust problem yet, you're building on sand. Don't panic. But do bring a towel.
 
@@ -194,7 +194,7 @@ DelegateOS solves this with cryptographic delegation tokens. Let's build it step
 ### Setup
 
 ```bash
-npm install delegateos
+npm install delegate-os
 ```
 
 ```typescript
@@ -205,7 +205,7 @@ import {
   verifyDCT,
   createMCPPlugin,
   InMemoryRevocationList,
-} from 'delegateos';
+} from 'delegate-os';
 ```
 
 ### Step 1: Create identities
@@ -383,11 +383,11 @@ Just shipped v0.3 of DelegateOS, a TypeScript library for adding cryptographic t
 - 374 tests across 27 files, 0 TypeScript errors
 
 ```bash
-npm install delegateos
+npm install delegate-os
 ```
 
 ```typescript
-import { generateKeypair, createDCT, attenuateDCT, verifyDCT } from 'delegateos';
+import { generateKeypair, createDCT, attenuateDCT, verifyDCT } from 'delegate-os';
 ```
 
 The API is functional-style: create a token, attenuate it for a sub-agent, verify at point of use. No classes to instantiate for the core flow.

@@ -1,5 +1,5 @@
 {
-  "name": "delegateos",
+  "name": "delegate-os",
   "version": "0.3.0",
   "description": "Scoped delegation protocol for the agentic web — DCTs, attestations, and MCP middleware",
   "type": "module",

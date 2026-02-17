@@ -21,12 +21,12 @@ DelegateOS fills that gap.
 ## Quick Start
 
 ```bash
-npm install delegateos
+npm install delegate-os
 ```
 
 ```typescript
-import { generateKeypair } from 'delegateos/core/crypto';
-import { createDCT, attenuateDCT, verifyDCT } from 'delegateos/core/dct';
+import { generateKeypair } from 'delegate-os/core/crypto';
+import { createDCT, attenuateDCT, verifyDCT } from 'delegate-os/core/dct';
 
 // 1. Create identities
 const alice = generateKeypair();
@@ -90,8 +90,8 @@ See [Getting Started](docs/getting-started.md) for the full tutorial. See [API R
 DelegateOS ships an MCP middleware plugin that intercepts `tools/call` requests and enforces DCT permissions transparently:
 
 ```typescript
-import { createMCPPlugin } from 'delegateos/mcp/plugin';
-import { InMemoryRevocationList } from 'delegateos/core/revocation';
+import { createMCPPlugin } from 'delegate-os/mcp/plugin';
+import { InMemoryRevocationList } from 'delegate-os/core/revocation';
 
 const plugin = createMCPPlugin({
   toolCapabilities: {
@@ -134,7 +134,7 @@ Demonstrates: delegation chains, attestation signing, token attenuation enforcem
 import {
   generateKeypair, createDCT, attenuateDCT, verifyDCT,
   createMCPPlugin, InMemoryRevocationList
-} from 'delegateos';
+} from 'delegate-os';
 
 // Your assistant and its sub-agent each get an identity
 const assistant = generateKeypair();
@@ -211,7 +211,7 @@ import {
   generateKeypair, createDCT, attenuateDCT,
   createContract, signContract, createAttestation, signAttestation,
   DelegationChainStore, TrustEngine,
-} from 'delegateos';
+} from 'delegate-os';
 
 // Identities
 const ciSystem = generateKeypair();
@@ -326,7 +326,7 @@ import {
   DelegationChainStore, DecompositionEngine, SequentialStrategy,
   VerificationEngine, MockLLMJudge,
   MemoryStorageAdapter,
-} from 'delegateos';
+} from 'delegate-os';
 
 // === Setup: Platform registers available agents ===
 
