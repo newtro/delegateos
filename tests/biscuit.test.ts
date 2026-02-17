@@ -241,8 +241,11 @@ describe('Biscuit DCT Engine', () => {
     expect(engine!.verifyDCT).toBeDefined();
   });
 
-  it('DCTEngineFactory returns null for sjt', () => {
+  it('DCTEngineFactory returns SJT engine for sjt format', () => {
     const engine = DCTEngineFactory.create('sjt');
-    expect(engine).toBeNull();
+    expect(engine).not.toBeNull();
+    expect(engine.createDCT).toBeTypeOf('function');
+    expect(engine.attenuateDCT).toBeTypeOf('function');
+    expect(engine.verifyDCT).toBeTypeOf('function');
   });
 });

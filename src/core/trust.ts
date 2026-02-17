@@ -18,10 +18,18 @@ const DEFAULT_CONFIG: TrustEngineConfig = {
   coldStartScore: 0.5,
 };
 
+/**
+ * Trust/Reputation engine that computes composite trust scores
+ * based on historical outcomes with exponential time decay.
+ */
 export class TrustEngine {
   private profiles: Map<string, TrustProfile> = new Map();
   private config: TrustEngineConfig;
 
+  /**
+   * Create a new trust engine.
+   * @param config - Optional partial config to override defaults
+   */
   constructor(config?: Partial<TrustEngineConfig>) {
     this.config = { ...DEFAULT_CONFIG, ...config };
   }

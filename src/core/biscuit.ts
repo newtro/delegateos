@@ -22,6 +22,7 @@ import {
   signObject,
   verifyObjectSignature,
 } from './crypto.js';
+import { _matchGlob as matchGlobShared, createDCT as createSJTDCT, attenuateDCT as attenuateSJTDCT, verifyDCT as verifySJTDCT } from './dct.js';
 
 // ── Datalog Types ──
 
@@ -517,8 +518,24 @@ export function verifyBiscuitDCT(
 
 export type DCTFormat = 'sjt' | 'biscuit';
 
+/** DCT engine interface returned by the factory */
+export interface DCTEngine {
+  createDCT: typeof createBiscuitDCT;
+  attenuateDCT: typeof attenuateBiscuitDCT;
+  verifyDCT: typeof verifyBiscuitDCT;
+}
+
+/**
+ * Factory for selecting DCT backend (SJT or Biscuit).
+ * Both backends implement the same interface for seamless switching.
+ */
 export class DCTEngineFactory {
-  static create(format: DCTFormat) {
+  /**
+   * Create a DCT engine for the given format.
+   * @param format - 'sjt' for Signed JSON Tokens, 'biscuit' for Datalog-based tokens
+   * @returns DCT engine with create, attenuate, and verify methods
+   */
+  static create(format: DCTFormat): DCTEngine {
     if (format === 'biscuit') {
       return {
         createDCT: createBiscuitDCT,
@@ -526,8 +543,11 @@ export class DCTEngineFactory {
         verifyDCT: verifyBiscuitDCT,
       };
     }
-    // Default: SJT — import dynamically to avoid circular deps
-    return null; // Caller uses the default SJT functions directly
+    return {
+      createDCT: createSJTDCT,
+      attenuateDCT: attenuateSJTDCT,
+      verifyDCT: verifySJTDCT,
+    };
   }
 }
 
@@ -559,15 +579,7 @@ function getCapabilities(facts: Fact[]): Capability[] {
     .map(f => ({ namespace: f.terms[0], action: f.terms[1], resource: f.terms[2] }));
 }
 
+/** Delegate to the shared glob matcher from dct.ts for consistency */
 function matchGlob(pattern: string, value: string): boolean {
-  if (pattern === '*' || pattern === '**') return true;
-  if (pattern === value) return true;
-  if (pattern.endsWith('/**')) {
-    return value.startsWith(pattern.slice(0, -3));
-  }
-  if (pattern.endsWith('/*')) {
-    const prefix = pattern.slice(0, -2);
-    return value.startsWith(prefix) && !value.slice(prefix.length).includes('/');
-  }
-  return false;
+  return matchGlobShared(pattern, value);
 }

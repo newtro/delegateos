@@ -47,14 +47,35 @@ export function generateKeypair(name?: string): Keypair {
   return { principal, privateKey };
 }
 
-/** Sign a message with Ed25519 */
+/**
+ * Sign a message with Ed25519.
+ * @param privateKey - 32-byte Ed25519 private key
+ * @param message - Message bytes to sign
+ * @returns 64-byte Ed25519 signature
+ * @throws If privateKey is not 32 bytes
+ */
 export function sign(privateKey: Uint8Array, message: Uint8Array): Uint8Array {
+  if (!(privateKey instanceof Uint8Array) || privateKey.length !== 32) {
+    throw new Error(`Invalid private key: expected 32 bytes, got ${privateKey?.length ?? 'null'}`);
+  }
+  if (!(message instanceof Uint8Array)) {
+    throw new Error('Invalid message: expected Uint8Array');
+  }
   return ed.sign(message, privateKey);
 }
 
-/** Verify an Ed25519 signature */
+/**
+ * Verify an Ed25519 signature.
+ * @param publicKey - 32-byte Ed25519 public key
+ * @param message - Original message bytes
+ * @param signature - 64-byte Ed25519 signature
+ * @returns true if signature is valid
+ */
 export function verify(publicKey: Uint8Array, message: Uint8Array, signature: Uint8Array): boolean {
   try {
+    if (!(publicKey instanceof Uint8Array) || publicKey.length !== 32) return false;
+    if (!(signature instanceof Uint8Array) || signature.length !== 64) return false;
+    if (!(message instanceof Uint8Array)) return false;
     return ed.verify(signature, message, publicKey);
   } catch {
     return false;
@@ -80,7 +101,12 @@ export function principalId(publicKey: Uint8Array): string {
   return toBase64url(publicKey);
 }
 
-/** Sign a canonical JSON object: canonicalize → BLAKE2b → Ed25519 sign */
+/**
+ * Sign a canonical JSON object: canonicalize → BLAKE2b → Ed25519 sign.
+ * @param privateKey - 32-byte Ed25519 private key
+ * @param obj - Object to sign (will be canonicalized)
+ * @returns Base64url-encoded signature
+ */
 export function signObject(privateKey: Uint8Array, obj: unknown): string {
   const payload = new TextEncoder().encode(canonicalize(obj));
   const hash = blake2b256(payload);
@@ -88,11 +114,22 @@ export function signObject(privateKey: Uint8Array, obj: unknown): string {
   return toBase64url(sig);
 }
 
-/** Verify signature over a canonical JSON object */
+/**
+ * Verify signature over a canonical JSON object.
+ * @param publicKeyB64 - Base64url-encoded Ed25519 public key
+ * @param obj - Object that was signed
+ * @param signatureB64 - Base64url-encoded signature to verify
+ * @returns true if signature is valid
+ */
 export function verifyObjectSignature(publicKeyB64: string, obj: unknown, signatureB64: string): boolean {
-  const publicKey = fromBase64url(publicKeyB64);
-  const signature = fromBase64url(signatureB64);
-  const payload = new TextEncoder().encode(canonicalize(obj));
-  const hash = blake2b256(payload);
-  return verify(publicKey, hash, signature);
+  try {
+    if (!publicKeyB64 || !signatureB64) return false;
+    const publicKey = fromBase64url(publicKeyB64);
+    const signature = fromBase64url(signatureB64);
+    const payload = new TextEncoder().encode(canonicalize(obj));
+    const hash = blake2b256(payload);
+    return verify(publicKey, hash, signature);
+  } catch {
+    return false;
+  }
 }

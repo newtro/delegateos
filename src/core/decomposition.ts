@@ -41,6 +41,10 @@ export function decompose(contract: TaskContract, strategy: DecompositionStrateg
 
 /**
  * Validate that a decomposition plan respects parent contract constraints.
+ * Checks budget totals, deadline compliance, capability subsets, and dependency cycles.
+ * @param plan - The decomposition plan to validate
+ * @param parentContract - The parent contract whose constraints must be respected
+ * @returns Result indicating success or a descriptive error
  */
 export function validatePlan(plan: DecompositionPlan, parentContract: TaskContract): Result<void> {
   // Budget: sum of sub-task budgets must not exceed parent

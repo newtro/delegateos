@@ -14,9 +14,18 @@ import { SSEWriter } from './sse.js';
 /** Active SSE session */
 interface SSESession {
   id: string;
-  writer: SSEWriter;
+  writer: SSEWriter | null;
   createdAt: number;
 }
+
+/** Maximum request body size in bytes (1 MB) */
+const MAX_BODY_BYTES = 1_048_576;
+
+/** Maximum concurrent SSE sessions */
+const MAX_SSE_SESSIONS = 100;
+
+/** Request timeout in milliseconds (30s) */
+const REQUEST_TIMEOUT_MS = 30_000;
 
 /**
  * HTTP server that exposes MCP middleware over HTTP with SSE streaming.
@@ -109,8 +118,18 @@ export class MCPHttpServer {
 
       this.sendJson(res, 404, { error: { code: 404, message: 'Not found' } });
     } catch (err) {
+      const message = err instanceof Error ? err.message : 'Internal server error';
+      // Log error for diagnostics (structured format)
+      console.error(JSON.stringify({
+        level: 'error',
+        component: 'MCPHttpServer',
+        method: req.method,
+        path: req.url,
+        error: message,
+        timestamp: new Date().toISOString(),
+      }));
       this.sendJson(res, 500, {
-        error: { code: 500, message: err instanceof Error ? err.message : 'Internal server error' },
+        error: { code: 500, message },
       });
     }
   }
@@ -134,6 +153,12 @@ export class MCPHttpServer {
   }
 
   private async handleMessage(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    const contentType = req.headers['content-type'] ?? '';
+    if (!contentType.includes('application/json')) {
+      this.sendJson(res, 415, { error: { code: 415, message: 'Content-Type must be application/json' } });
+      return;
+    }
+
     const body = await this.readBody(req);
     if (!body) {
       this.sendJson(res, 400, { error: { code: 400, message: 'Invalid JSON body' } });
@@ -174,6 +199,12 @@ export class MCPHttpServer {
   }
 
   private async handleStream(req: IncomingMessage, res: ServerResponse): Promise<void> {
+    const contentType = req.headers['content-type'] ?? '';
+    if (!contentType.includes('application/json')) {
+      this.sendJson(res, 415, { error: { code: 415, message: 'Content-Type must be application/json' } });
+      return;
+    }
+
     const body = await this.readBody(req);
     if (!body) {
       this.sendJson(res, 400, { error: { code: 400, message: 'Invalid JSON body' } });
@@ -199,12 +230,18 @@ export class MCPHttpServer {
       return;
     }
 
+    // Check SSE session limit
+    if (this.sessions.size >= MAX_SSE_SESSIONS) {
+      this.sendJson(res, 503, { error: { code: 503, message: 'Too many active streaming sessions' } });
+      return;
+    }
+
     // Create SSE session (writer will be set when client connects to events endpoint)
     const sessionId = randomUUID();
 
     this.sessions.set(sessionId, {
       id: sessionId,
-      writer: null as unknown as SSEWriter,
+      writer: null,
       createdAt: Date.now(),
     });
 
@@ -301,12 +338,31 @@ export class MCPHttpServer {
   private readBody(req: IncomingMessage): Promise<unknown | null> {
     return new Promise((resolve) => {
       let data = '';
-      req.on('data', (chunk: Buffer) => { data += chunk.toString(); });
+      let size = 0;
+      const timeout = setTimeout(() => {
+        req.destroy();
+        resolve(null);
+      }, REQUEST_TIMEOUT_MS);
+
+      req.on('data', (chunk: Buffer) => {
+        size += chunk.length;
+        if (size > MAX_BODY_BYTES) {
+          clearTimeout(timeout);
+          req.destroy();
+          resolve(null);
+          return;
+        }
+        data += chunk.toString();
+      });
       req.on('end', () => {
+        clearTimeout(timeout);
         try { resolve(JSON.parse(data)); }
         catch { resolve(null); }
       });
-      req.on('error', () => resolve(null));
+      req.on('error', () => {
+        clearTimeout(timeout);
+        resolve(null);
+      });
     });
   }
 }

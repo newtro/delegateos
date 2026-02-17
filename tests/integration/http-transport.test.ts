@@ -385,4 +385,21 @@ describe('HTTP Transport Integration', () => {
     // Should fail to connect now
     await expect(fetch(`${shutdownUrl}/health`)).rejects.toThrow();
   });
+
+  it('rejects POST without Content-Type: application/json', async () => {
+    const resp = await fetch(`${baseUrl}/mcp/message`, {
+      method: 'POST',
+      body: JSON.stringify({ id: '1', method: 'tools/call' }),
+    });
+    expect(resp.status).toBe(415);
+  });
+
+  it('rejects POST with invalid JSON body', async () => {
+    const resp = await fetch(`${baseUrl}/mcp/message`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: 'not json at all{{{',
+    });
+    expect(resp.status).toBe(400);
+  });
 });

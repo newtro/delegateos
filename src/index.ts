@@ -130,7 +130,7 @@ export {
   attenuateBiscuitDCT,
   verifyBiscuitDCT,
 } from './core/biscuit.js';
-export type { Fact, Rule, Check, Policy, DCTFormat } from './core/biscuit.js';
+export type { Fact, Rule, Check, Policy, DCTFormat, DCTEngine } from './core/biscuit.js';
 
 // ── Verification Engine ──
 export {
