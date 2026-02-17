@@ -145,11 +145,14 @@ See [docs/protocol-spec.md](docs/protocol-spec.md) for the wire-level protocol s
 - **Biscuit Token Backend** — Pure TypeScript Datalog engine with forward-chaining evaluation, Biscuit-compatible token format as opt-in upgrade from SJT
 - **Persistent Storage** — Abstract `StorageAdapter` interface with in-memory and SQLite (`better-sqlite3`) implementations
 
-### Coming in v0.2 Phase B
-- A2A protocol integration (Agent Card extensions)
-- `llm_judge` and `human_review` verification methods
+### v0.2 Phase B
+- **Verification Engine** — Unified `VerificationEngine` class dispatching across all 5 verification methods: `schema_match`, `deterministic_check`, `composite`, `llm_judge`, `human_review`. Pluggable `LLMJudgeAdapter` and `HumanReviewAdapter` interfaces with mock implementations for testing
+- **A2A Protocol** — Agent Card self-describing identity with Ed25519-signed cards, `AgentRegistry` for discovery/resolution, `DelegationBroker` for automated agent selection and delegation proposal based on capabilities, trust scores, and cost
+- **Distributed Revocation** — Async `RevocationStore` interface with `LocalRevocationStore` (wraps existing) and `DistributedRevocationStore` with gossip-style sync, anti-entropy, deduplication, and signature verification. In-process simulation for v0.2
+
+### Coming in v0.2 Phase C
 - HTTP+SSE MCP proxy transport
-- Distributed revocation
+- Real network transport for distributed revocation
 
 ## License
 

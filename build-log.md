@@ -70,12 +70,23 @@ Loop Constraints: max 3 iterations per phase, score ≥ 7 to pass
 - Started: 2026-02-17 02:16 UTC
 - Finished: 2026-02-17 02:23 UTC
 
+## Phase B (v0.2) — Verification Engine, A2A Protocol, Distributed Revocation
+
+### New Modules
+1. **Verification Engine** (`src/core/verification.ts`) — `VerificationEngine` class unifying all 5 verification methods. `LLMJudgeAdapter`/`HumanReviewAdapter` interfaces with `MockLLMJudge`/`MockHumanReview` for testing. Criteria scored 0-1, average scoring, configurable passing thresholds.
+2. **A2A Protocol** (`src/a2a/`) — `AgentCard` type with Ed25519 self-signatures, `DelegationPolicy`, `AgentRegistry` (register, discover, resolve with capability/trust/namespace filtering), `DelegationBroker` (find best agent, propose/accept delegations integrating trust engine)
+3. **Distributed Revocation** (`src/core/distributed-revocation.ts`) — `RevocationStore` async interface, `LocalRevocationStore` wrapping existing `InMemoryRevocationList`, `DistributedRevocationStore` with gossip-style broadcast, anti-entropy sync, dedup by revocationId, signature verification, configurable maxPeers/syncInterval
+
+### Stats
+- New tests: 56 (verification: 21, a2a: 18, distributed-revocation: 17)
+- Total tests: 209 (153 existing + 56 new), all passing
+- TypeScript: 0 errors
+- Build: 2026-02-17 02:29 UTC
+
 ---
 
 - TypeScript: 0 compile errors ✅
-- Files: 35 total (17 source, 6 tests, 12 docs/config)
-- Code: 3,273 lines of TypeScript
-- Docs: 144KB of documentation
+- Files: 40+ total
 - Status: **COMPLETE**
 
 ## v0.1 Build Complete

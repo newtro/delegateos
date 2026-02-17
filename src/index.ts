@@ -132,6 +132,38 @@ export {
 } from './core/biscuit.js';
 export type { Fact, Rule, Check, Policy, DCTFormat } from './core/biscuit.js';
 
+// ── Verification Engine ──
+export {
+  VerificationEngine,
+  MockLLMJudge,
+  MockHumanReview,
+} from './core/verification.js';
+export type {
+  LLMJudgeSpec,
+  HumanReviewSpec,
+  LLMJudgeAdapter,
+  HumanReviewAdapter,
+  ExtendedVerificationSpec,
+  SchemaMatchSpec,
+  DeterministicCheckSpec,
+  CompositeSpec,
+} from './core/verification.js';
+
+// ── A2A Protocol ──
+export { AgentRegistry } from './a2a/registry.js';
+export { DelegationBroker } from './a2a/broker.js';
+export type { AgentCard, AgentFilter, DelegationPolicy } from './a2a/types.js';
+
+// ── Distributed Revocation ──
+export {
+  LocalRevocationStore,
+  DistributedRevocationStore,
+} from './core/distributed-revocation.js';
+export type {
+  RevocationStore,
+  DistributedRevocationConfig,
+} from './core/distributed-revocation.js';
+
 // ── Storage ──
 export { MemoryStorageAdapter } from './storage/memory.js';
 export { SqliteStorageAdapter } from './storage/sqlite.js';
