@@ -30,6 +30,15 @@ export type {
   AttestationResult,
   Attestation,
   Delegation,
+  TrustOutcome,
+  TrustProfile,
+  TrustScore,
+  TrustEngineConfig,
+  SubTask,
+  DecompositionPlan,
+  DecompositionStrategy,
+  DelegationFilter,
+  StorageAdapter,
 } from './core/types.js';
 
 // ── Crypto ──
@@ -101,3 +110,28 @@ export type {
   MCPErrorResponse,
   MCPResponse,
 } from './mcp/types.js';
+
+// ── Trust Engine ──
+export { TrustEngine } from './core/trust.js';
+
+// ── Decomposition ──
+export {
+  decompose,
+  validatePlan,
+  SequentialStrategy,
+  ParallelStrategy,
+} from './core/decomposition.js';
+
+// ── Biscuit Engine ──
+export {
+  DatalogEvaluator,
+  DCTEngineFactory,
+  createBiscuitDCT,
+  attenuateBiscuitDCT,
+  verifyBiscuitDCT,
+} from './core/biscuit.js';
+export type { Fact, Rule, Check, Policy, DCTFormat } from './core/biscuit.js';
+
+// ── Storage ──
+export { MemoryStorageAdapter } from './storage/memory.js';
+export { SqliteStorageAdapter } from './storage/sqlite.js';

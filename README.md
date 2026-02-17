@@ -128,9 +128,9 @@ See [docs/architecture.md](docs/architecture.md) for the full architecture docum
 
 See [docs/protocol-spec.md](docs/protocol-spec.md) for the wire-level protocol specification.
 
-## v0.1 Scope
+## Features
 
-### Included
+### Core (v0.1)
 - **DCT Engine** — Create, attenuate, verify Ed25519-signed JSON tokens
 - **Contract System** — Task contracts with schema, deterministic, and composite verification
 - **Attestation Engine** — Signed completion and delegation verification attestations
@@ -139,12 +139,14 @@ See [docs/protocol-spec.md](docs/protocol-spec.md) for the wire-level protocol s
 - **MCP Middleware** — `tools/call` interception, DCT enforcement, audit logging
 - **Demo** — Full PR review delegation scenario
 
-### Coming in v0.2
-- Trust/reputation scoring engine
+### v0.2 Phase A
+- **Trust/Reputation Engine** — Composite trust scoring with exponential decay, cold-start handling, reliability/quality/speed breakdown
+- **Contract Decomposition** — Recursive task splitting with sequential and parallel strategies, dependency tracking, budget/deadline/capability validation
+- **Biscuit Token Backend** — Pure TypeScript Datalog engine with forward-chaining evaluation, Biscuit-compatible token format as opt-in upgrade from SJT
+- **Persistent Storage** — Abstract `StorageAdapter` interface with in-memory and SQLite (`better-sqlite3`) implementations
+
+### Coming in v0.2 Phase B
 - A2A protocol integration (Agent Card extensions)
-- Contract decomposition engine (recursive task splitting)
-- Biscuit token backend (upgrade from signed JSON)
-- Persistent storage (SQLite/Postgres)
 - `llm_judge` and `human_review` verification methods
 - HTTP+SSE MCP proxy transport
 - Distributed revocation

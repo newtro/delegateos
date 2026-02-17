@@ -253,3 +253,90 @@ export interface Delegation {
   completedAt?: string;
   attestationId?: string;
 }
+
+// ── Trust / Reputation ──
+
+export interface TrustOutcome {
+  timestamp: string;
+  success: boolean;
+  qualityScore: number;    // 0-1
+  durationMs: number;
+  contractId: string;
+  attestationId: string;
+}
+
+export interface TrustProfile {
+  principalId: string;
+  outcomes: TrustOutcome[];
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface TrustScore {
+  composite: number;       // 0-1
+  reliability: number;     // 0-1
+  quality: number;         // 0-1
+  speed: number;           // 0-1
+  confidence: number;      // 0-1 (low when few outcomes)
+  totalOutcomes: number;
+}
+
+export interface TrustEngineConfig {
+  /** Half-life for exponential decay in milliseconds (default: 7 days) */
+  halfLifeMs: number;
+  /** Expected duration in ms for "perfect" speed score (default: 60000) */
+  expectedDurationMs: number;
+  /** Minimum outcomes before confidence is high (default: 10) */
+  minOutcomesForConfidence: number;
+  /** Default score for new agents (default: 0.5) */
+  coldStartScore: number;
+}
+
+// ── Decomposition ──
+
+export interface SubTask {
+  id: string;
+  title: string;
+  description: string;
+  capabilities: Capability[];
+  budgetMicrocents: number;
+  deadline: string;
+  dependsOn: string[];     // IDs of prerequisite sub-tasks
+  metadata?: Record<string, unknown>;
+}
+
+export interface DecompositionPlan {
+  id: string;
+  parentContractId: string;
+  strategy: string;
+  subTasks: SubTask[];
+  createdAt: string;
+}
+
+export interface DecompositionStrategy {
+  name: string;
+  decompose(contract: TaskContract): SubTask[];
+}
+
+// ── Storage ──
+
+export interface DelegationFilter {
+  contractId?: string;
+  from?: string;
+  to?: string;
+  status?: Delegation['status'];
+}
+
+export interface StorageAdapter {
+  saveDelegation(delegation: Delegation): Promise<void>;
+  getDelegation(id: string): Promise<Delegation | null>;
+  listDelegations(filter?: DelegationFilter): Promise<Delegation[]>;
+  saveAttestation(attestation: Attestation): Promise<void>;
+  getAttestation(id: string): Promise<Attestation | null>;
+  saveTrustProfile(profile: TrustProfile): Promise<void>;
+  getTrustProfile(principalId: string): Promise<TrustProfile | null>;
+  saveRevocation(entry: RevocationEntry): Promise<void>;
+  getRevocations(): Promise<RevocationEntry[]>;
+  saveContract(contract: TaskContract): Promise<void>;
+  getContract(id: string): Promise<TaskContract | null>;
+}

@@ -1,6 +1,6 @@
 {
   "name": "delegateos",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Scoped delegation protocol for the agentic web — DCTs, attestations, and MCP middleware",
   "type": "module",
   "main": "dist/index.js",
@@ -33,10 +33,12 @@
     "@noble/ed25519": "^2.0.0",
     "@noble/hashes": "^2.0.1",
     "ajv": "^8.12.0",
+    "better-sqlite3": "^12.6.2",
     "blakejs": "^1.2.0",
     "canonicalize": "^2.0.0"
   },
   "devDependencies": {
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^20.0.0",
     "typescript": "^5.4.0",
     "vitest": "^1.0.0"

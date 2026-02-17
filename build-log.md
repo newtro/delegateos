@@ -51,13 +51,34 @@ Loop Constraints: max 3 iterations per phase, score ≥ 7 to pass
 ## Phase 7: Final Assembly
 - Demo: all 4 scenarios run clean ✅
 - Tests: 61 passing, 6 test files ✅
+## Phase A (v0.2) — Trust Engine, Decomposition, Biscuit Backend, Storage Layer
+
+### New Modules
+1. **Trust Engine** (`src/core/trust.ts`) — TrustEngine class with exponential decay scoring, cold-start handling, composite scores (reliability 40%, quality 40%, speed 20%)
+2. **Decomposition Engine** (`src/core/decomposition.ts`) — SequentialStrategy, ParallelStrategy, validatePlan with budget/deadline/capability/dependency validation, cycle detection
+3. **Biscuit Token Backend** (`src/core/biscuit.ts`) — DatalogEvaluator with forward-chaining, facts, rules with joins, constraints, checks, policies; BiscuitDCT create/attenuate/verify; DCTEngineFactory
+4. **Storage Layer** (`src/storage/`) — StorageAdapter interface, MemoryStorageAdapter, SqliteStorageAdapter (better-sqlite3) with auto-schema, indexes, JSON columns
+
+### Stats
+- New types added to `src/core/types.ts`: TrustOutcome, TrustProfile, TrustScore, TrustEngineConfig, SubTask, DecompositionPlan, DecompositionStrategy, DelegationFilter, StorageAdapter
+- Tests: 153 total (99 existing + 54 new), all passing
+- TypeScript: 0 errors
+- Dependencies added: better-sqlite3, @types/better-sqlite3
+- Version: 0.1.0 → 0.2.0
+
+### Build
+- Started: 2026-02-17 02:16 UTC
+- Finished: 2026-02-17 02:23 UTC
+
+---
+
 - TypeScript: 0 compile errors ✅
 - Files: 35 total (17 source, 6 tests, 12 docs/config)
 - Code: 3,273 lines of TypeScript
 - Docs: 144KB of documentation
 - Status: **COMPLETE**
 
-## Build Complete
+## v0.1 Build Complete
 - Started: 2026-02-17 01:26 UTC
 - Finished: 2026-02-17 02:03 UTC
 - Total time: ~37 minutes
