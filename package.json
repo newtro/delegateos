@@ -1,12 +1,33 @@
 {
   "name": "delegateos",
   "version": "0.1.0",
+  "description": "Scoped delegation protocol for the agentic web — DCTs, attestations, and MCP middleware",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "keywords": [
+    "delegation",
+    "capability",
+    "token",
+    "mcp",
+    "agent",
+    "multi-agent",
+    "ed25519",
+    "attestation",
+    "revocation",
+    "middleware"
+  ],
+  "license": "MIT",
   "scripts": {
     "build": "tsc",
-    "test": "vitest run"
+    "test": "vitest run",
+    "demo": "npx tsx src/demo/scenario.ts"
   },
   "dependencies": {
     "@noble/ed25519": "^2.0.0",

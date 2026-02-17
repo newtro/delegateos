@@ -3,7 +3,7 @@
  */
 
 import type { RevocationEntry, Result, Keypair } from './types.js';
-import { signObject, verifyObjectSignature, canonicalize } from './crypto.js';
+import { signObject, verifyObjectSignature } from './crypto.js';
 
 /** Revocation list interface */
 export interface RevocationListInterface {

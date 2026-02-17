@@ -172,7 +172,7 @@ export class OrchestratorAgent {
           attestationId: reviewResult.attestation.id,
           attestationValid,
         });
-      } catch (err: any) {
+      } catch (err: unknown) {
         results.push({
           name: plan.specialist.name,
           specialty: plan.specialty,
